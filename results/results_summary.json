@@ -1,0 +1,55 @@
+{
+  "dataset_rows_after_cleaning": 1599,
+  "rows_dropped_missing": 201,
+  "split": {
+    "train": 1119,
+    "test": 320,
+    "validation": 160
+  },
+  "results": {
+    "Random Forest": {
+      "best_params": {
+        "max_depth": 12,
+        "min_samples_split": 2,
+        "n_estimators": 100
+      },
+      "val_accuracy": 0.50625,
+      "val_loss": 0.8949237281791784,
+      "val_precision": 0.46042617960426174,
+      "val_recall": 0.4595959595959596,
+      "val_f1": 0.4444444444444445
+    },
+    "XGBoost": {
+      "best_params": {
+        "learning_rate": 0.1,
+        "max_depth": 4,
+        "n_estimators": 150
+      },
+      "val_accuracy": 0.54375,
+      "val_loss": 0.9937457030439891,
+      "val_precision": 0.527303956408434,
+      "val_recall": 0.5175925925925926,
+      "val_f1": 0.5117949385023914
+    },
+    "SVM": {
+      "best_params": {
+        "kernel": "rbf"
+      },
+      "val_accuracy": 0.43125,
+      "val_loss": 1.0378420447605845,
+      "val_precision": 0.24995639281353568,
+      "val_recall": 0.32516835016835016,
+      "val_f1": 0.2370847882532008
+    },
+    "Hybrid (RF + XGBoost Stacked)": {
+      "best_params": "RF + XGBoost base learners, Logistic Regression meta-learner",
+      "val_accuracy": 0.5625,
+      "val_loss": 0.8927872666292538,
+      "val_precision": 0.37642366031596075,
+      "val_recall": 0.47819865319865323,
+      "val_f1": 0.421023322851153
+    }
+  },
+  "best_model": "Hybrid (RF + XGBoost Stacked)",
+  "best_model_test_accuracy": 0.578125
+}
