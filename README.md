@@ -1,6 +1,6 @@
 # Machine Learning Based Lifecycle Intelligence System for Non-Biodegradable Automotive Materials
 
-**Team 53** — Prajwal B T (NNM23IS128), V K Ronith (NNM23IS203), Srinidhi D S (NNM23IS185), Swaroop Sathish Y (NNM23IS191)
+**Team 53** — Prajwal B T (NNM23IS128),  Srinidhi D S (NNM23IS185), Swaroop Sathish Y (NNM23IS191), V K Ronith (NNM23IS203),
 **Guide:** Pratheeksha Hegde N
 **Department:** Information Science and Engineering, NMAM Institute of Technology, Nitte
 
