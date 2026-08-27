@@ -20,8 +20,8 @@ Modern automobiles increasingly use non-biodegradable materials — composite fi
 ```
 ├── data/
 │   └── automotive_material_lifecycle_dataset.csv   # 1,800-row dataset (materials, components, lifecycle features)
-├── src/
-│   └── train_pipeline.py                           # Preprocessing + multi-algorithm training pipeline
+├── notebooks/
+│   └── ML_Lifecycle_Intelligence.ipynb              # Preprocessing + multi-algorithm training pipeline
 ├── results/
 │   ├── results_summary.json                        # Validation metrics per algorithm
 │   ├── xgboost_training_curves.png                  # Validation loss & accuracy per boosting round
@@ -40,7 +40,7 @@ Modern automobiles increasingly use non-biodegradable materials — composite fi
 
 ## Methodology / Pipeline
 
-`src/train_pipeline.py` runs the full pipeline:
+`notebooks/ML_Lifecycle_Intelligence.ipynb` runs the full pipeline:
 
 1. **Preprocessing** — drops rows with missing values (~11% of rows affected across 6 numeric columns), encodes categorical features.
 2. **Split** — 70% train / 20% test / 10% validation (stratified).
@@ -51,21 +51,22 @@ Modern automobiles increasingly use non-biodegradable materials — composite fi
 ### Running it
 
 ```bash
-pip install pandas numpy scikit-learn xgboost matplotlib
-cd src
-python train_pipeline.py
+pip install pandas numpy scikit-learn xgboost matplotlib seaborn jupyter
+jupyter notebook notebooks/ML_Lifecycle_Intelligence.ipynb
 ```
+
+Run all cells top to bottom; outputs (plots + `results_summary.json`) are written to `results/`.
 
 ### Current Results (baseline, Phase 1)
 
 | Model | Validation Accuracy | Validation Loss |
 |---|---|---|
-| Random Forest | 0.506 | 0.895 |
-| XGBoost | 0.544 | 0.994 |
+| Random Forest | 0.544 | 0.888 |
+| XGBoost | 0.550 | 0.882 |
 | SVM | 0.431 | 1.038 |
-| **Hybrid (RF + XGBoost Stacked)** | **0.563** | **0.893** |
+| **Hybrid (RF + XGBoost Stacked)** | **0.569** | **0.873** |
 
-Best model (Hybrid) reaches **57.8% test accuracy**. Known issue to address next: the model under-predicts the minority "Dispose" class, and XGBoost shows signs of overfitting past ~20 boosting rounds — both flagged as next steps (class-weighting / resampling, early stopping).
+Best model (Hybrid) reaches **58.4% test accuracy**. Known issue to address next: the model under-predicts the minority "Dispose" class, and XGBoost shows signs of overfitting past ~20 boosting rounds — both flagged as next steps (class-weighting / resampling, early stopping).
 
 ## Status
 
