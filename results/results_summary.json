@@ -20,17 +20,53 @@
       "val_recall": 0.5080808080808081,
       "val_f1": 0.4993118287325027
     },
+    "Extra Trees": {
+      "best_params": {
+        "max_depth": 8,
+        "min_samples_split": 5,
+        "n_estimators": 100
+      },
+      "val_accuracy": 0.5625,
+      "val_loss": 0.8728089872127649,
+      "val_precision": 0.5446894262683736,
+      "val_recall": 0.506986531986532,
+      "val_f1": 0.4895942454081989
+    },
     "XGBoost": {
       "best_params": {
         "learning_rate": 0.05,
         "max_depth": 4,
-        "n_estimators": 150
+        "n_estimators": 30
       },
-      "val_accuracy": 0.55,
-      "val_loss": 0.8819795514518468,
-      "val_precision": 0.4916178592649181,
-      "val_recall": 0.5005892255892256,
-      "val_f1": 0.47795815295815297
+      "val_accuracy": 0.54375,
+      "val_loss": 0.9031860612845769,
+      "val_precision": 0.48341503267973857,
+      "val_recall": 0.49191919191919187,
+      "val_f1": 0.4627865961199295
+    },
+    "LightGBM": {
+      "best_params": {
+        "learning_rate": 0.05,
+        "max_depth": 4,
+        "n_estimators": 30
+      },
+      "val_accuracy": 0.54375,
+      "val_loss": 0.8871230939832152,
+      "val_precision": 0.47202380952380957,
+      "val_recall": 0.4864478114478114,
+      "val_f1": 0.4523193135268689
+    },
+    "CatBoost": {
+      "best_params": {
+        "depth": 4,
+        "iterations": 30,
+        "learning_rate": 0.2
+      },
+      "val_accuracy": 0.58125,
+      "val_loss": 0.8802038258555649,
+      "val_precision": 0.5866666666666668,
+      "val_recall": 0.5277777777777778,
+      "val_f1": 0.5142686770593747
     },
     "SVM": {
       "best_params": {
@@ -42,15 +78,63 @@
       "val_recall": 0.32516835016835016,
       "val_f1": 0.2370847882532008
     },
-    "Hybrid (RF + XGBoost Stacked)": {
+    "MLP Neural Network": {
+      "best_params": {
+        "hidden_layer_sizes": [
+          32,
+          16
+        ],
+        "solver": "adam",
+        "learning_rate_init": 0.01,
+        "epochs": 30
+      },
+      "val_accuracy": 0.55,
+      "val_loss": 1.0336924660248292,
+      "val_precision": 0.5318454963205759,
+      "val_recall": 0.5122053872053872,
+      "val_f1": 0.5173160173160173
+    },
+    "Hybrid 1 (RF+XGB\u2192LR)": {
       "best_params": "RF + XGBoost base learners, Logistic Regression meta-learner",
-      "val_accuracy": 0.56875,
-      "val_loss": 0.8727941521831422,
-      "val_precision": 0.38036874083385713,
-      "val_recall": 0.48425925925925933,
-      "val_f1": 0.4257024171654728
+      "val_accuracy": 0.55625,
+      "val_loss": 0.8666862383878857,
+      "val_precision": 0.3715538847117794,
+      "val_recall": 0.47500000000000003,
+      "val_f1": 0.4162262673713055
+    },
+    "Hybrid 2 (RF+XGB+CatBoost\u2192LR)": {
+      "best_params": "RF + XGBoost + CatBoost base learners, Logistic Regression meta-learner",
+      "val_accuracy": 0.55625,
+      "val_loss": 0.8638434358971633,
+      "val_precision": 0.539136302294197,
+      "val_recall": 0.49141414141414147,
+      "val_f1": 0.46186729301233126
+    },
+    "Hybrid 3 (XGB+LGBM+CatBoost\u2192LR)": {
+      "best_params": "XGBoost + LightGBM + CatBoost base learners, Logistic Regression meta-learner",
+      "val_accuracy": 0.55625,
+      "val_loss": 0.8539022027313212,
+      "val_precision": 0.539136302294197,
+      "val_recall": 0.49141414141414147,
+      "val_f1": 0.46186729301233126
+    },
+    "Hybrid 4 (RF+XGB+CatBoost Soft-Voting)": {
+      "best_params": "RF + XGBoost + CatBoost, soft-voting (probability averaging, no meta-learner)",
+      "val_accuracy": 0.55,
+      "val_loss": 0.880959181427432,
+      "val_precision": 0.5125266362252664,
+      "val_recall": 0.49772727272727274,
+      "val_f1": 0.479025444542686
+    },
+    "Hybrid 5 (RF+XGB\u2192XGB meta)": {
+      "best_params": "RF + XGBoost base learners, XGBoost meta-learner (non-linear combiner)",
+      "val_accuracy": 0.5125,
+      "val_loss": 0.885265153757298,
+      "val_precision": 0.46157754608458834,
+      "val_recall": 0.463047138047138,
+      "val_f1": 0.4396011396011396
     }
   },
-  "best_model": "Hybrid (RF + XGBoost Stacked)",
-  "best_model_test_accuracy": 0.584375
+  "best_model": "CatBoost",
+  "best_model_test_accuracy": 0.60625
 }
