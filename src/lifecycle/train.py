@@ -784,6 +784,49 @@ def plot_model_comparison(results, ceiling, baseline, path):
     fig.tight_layout(); fig.savefig(path, dpi=150); plt.close(fig)
 
 
+def plot_model_comparison_lines(summary, path):
+    """
+    Line graph of validation accuracy and macro F1 across all models, one panel
+    per target. Reads the run summary, so it can be redrawn from
+    results_summary_v2.json without retraining. Models are ordered by macro F1
+    (the selection metric), so the best model sits at the right of each panel.
+    """
+    panels = [("disposition", "Disposition (Reuse / Recycle / Dispose)"),
+              ("environmental_risk", "Environmental Risk (Low / Moderate / High / Critical)")]
+    fig, axes = plt.subplots(2, 1, figsize=(12, 9))
+    for ax, (key, title) in zip(axes, panels):
+        s = summary[key]
+        names = sorted(s["models"], key=lambda n: s["models"][n]["validation"]["f1_macro"])
+        acc = [s["models"][n]["validation"]["accuracy"] for n in names]
+        f1 = [s["models"][n]["validation"]["f1_macro"] for n in names]
+        x = np.arange(len(names))
+        ax.plot(x, acc, "-o", color="#2a78d6", lw=2, ms=8, label="Validation accuracy")
+        ax.plot(x, f1, "-s", color="#eb6834", lw=2, ms=8, label="Validation macro F1")
+        ax.annotate(f"{acc[-1]:.3f}", (x[-1], acc[-1]), textcoords="offset points",
+                    xytext=(0, 9), ha="center", fontsize=10)
+        ax.annotate(f"{f1[-1]:.3f}", (x[-1], f1[-1]), textcoords="offset points",
+                    xytext=(0, -16), ha="center", fontsize=10)
+        lo, hi = min(acc + f1), max(acc + f1)
+        ceiling = s.get("feature_based_ceiling")
+        if ceiling:
+            ax.axhline(ceiling, color="#444444", ls="--", lw=1.3,
+                       label=f"Feature-based ceiling ({ceiling:.1%})")
+            hi = max(hi, ceiling)
+        ax.set_ylim(lo - 0.008, hi + 0.008)
+        ax.set_xticks(x)
+        # Hybrids are labelled "Hybrid A".."Hybrid D"; their members are listed
+        # in the deck and README.
+        ax.set_xticklabels([n.split(" (")[0] if n.startswith("Hybrid") else n
+                            for n in names], rotation=25, ha="right", fontsize=10)
+        ax.set_ylabel("Score", fontsize=11)
+        ax.set_title(f"{title}  -  majority baseline {s['majority_baseline']:.1%}",
+                     fontsize=12)
+        ax.grid(alpha=0.3); ax.legend(loc="upper left", fontsize=9.5)
+    fig.suptitle("Model comparison on the validation split (ordered by macro F1)",
+                 fontsize=13)
+    fig.tight_layout(); fig.savefig(path, dpi=150); plt.close(fig)
+
+
 def plot_confusion(y_true, y_pred, labels, title, path, normalize=True):
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     disp = cm.astype(float) / cm.sum(axis=1, keepdims=True) if normalize else cm
@@ -795,7 +838,7 @@ def plot_confusion(y_true, y_pred, labels, title, path, normalize=True):
     fig.tight_layout(); fig.savefig(path, dpi=150); plt.close(fig)
 
 
-def plot_importance(model, names, path, top_n=20):
+def plot_importance(model, names, path, top_n=20, title=None):
     """Permutation-free importance, read straight off the fitted tree model."""
     est = model.named_steps["clf"] if isinstance(model, Pipeline) else model
     est = getattr(est, "model_", est)   # unwrap XGBWrapper
@@ -804,13 +847,14 @@ def plot_importance(model, names, path, top_n=20):
     imp = pd.Series(est.feature_importances_, index=names).sort_values()[-top_n:]
     fig, ax = plt.subplots(figsize=(8.5, 0.34 * len(imp) + 1.8))
     ax.barh(imp.index, imp.values, color="#3b6ea5")
-    ax.set_xlabel("Importance"); ax.set_title(f"Top {len(imp)} features", fontsize=11)
+    ax.set_xlabel("Importance (mean decrease in impurity)")
+    ax.set_title(title or f"Top {len(imp)} features", fontsize=11)
     ax.tick_params(axis="y", labelsize=8)
     fig.tight_layout(); fig.savefig(path, dpi=150); plt.close(fig)
     return imp.sort_values(ascending=False).to_dict()
 
 
-def plot_shap(model, X_sample, names, out_dir):
+def plot_shap(model, X_sample, names, out_dir, model_name="", focus_class="Dispose"):
     """
     SHAP explanations: a global importance view plus one per-part waterfall.
 
@@ -837,22 +881,36 @@ def plot_shap(model, X_sample, names, out_dir):
         print(f"  SHAP unavailable for this model: {exc}")
         return None
 
+    # classes_ is sorted alphabetically (Dispose, Recycle, Reuse), so class
+    # indices are looked up by name rather than assumed.
+    classes = [str(c) for c in getattr(est, "classes_", [])]
+    suffix = f" - {model_name}" if model_name else ""
+
     plt.figure()
-    shap.summary_plot(sv, Xt_df, plot_type="bar", max_display=18, show=False)
-    plt.title("SHAP global feature importance", fontsize=11)
+    shap.summary_plot(sv, Xt_df, plot_type="bar", max_display=18, show=False,
+                      class_names=classes or None)
+    plt.title(f"SHAP global feature importance{suffix}", fontsize=11)
     plt.tight_layout()
     plt.savefig(os.path.join(out_dir, "shap_global_importance.png"), dpi=150)
     plt.close()
 
-    # Per-part explanation for the first sample, on the Dispose class where
-    # available, since that is the decision a user most needs justified.
+    # Per-part explanation on the Dispose class, since that is the decision a
+    # user most needs justified. The part shown is the first test sample the
+    # model actually predicts as Dispose. Feature values are standardised
+    # (numeric) or ordinal codes, as the model sees them.
     try:
-        single = sv[0]
+        cls = classes.index(focus_class) if focus_class in classes else 0
+        pred = np.asarray(est.predict(Xt)).ravel()
+        hits = np.flatnonzero(pred.astype(str) == classes[cls]) if classes else []
+        idx = int(hits[0]) if len(hits) else 0
+        single = sv[idx]
         if single.values.ndim > 1:
-            cls = min(2, single.values.shape[-1] - 1)
             single = single[..., cls]
         plt.figure()
         shap.plots.waterfall(single, max_display=14, show=False)
+        plt.gcf().suptitle(f"Why one part was classed "
+                           f"'{classes[cls] if classes else cls}'{suffix}",
+                           fontsize=11)
         plt.tight_layout()
         plt.savefig(os.path.join(out_dir, "shap_single_part.png"), dpi=150)
         plt.close()
@@ -1075,10 +1133,12 @@ def run_target(df, target, labels, out_dir, do_hybrids=True, do_shap=True,
               f"(best model {best_name} is not tree-based)")
 
     importance = plot_importance(explain_model, names,
-                                 os.path.join(out_dir, f"{tag}_feature_importance.png"))
+                                 os.path.join(out_dir, f"{tag}_feature_importance.png"),
+                                 title=f"Top 20 features - {explain_name} ({target})")
 
     if do_shap:
-        plot_shap(explain_model, splits["X_test"].head(400), names, out_dir)
+        plot_shap(explain_model, splits["X_test"].head(400), names, out_dir,
+                  model_name=explain_name)
 
     summary = {
         "target": target,
@@ -1165,6 +1225,8 @@ def main():
     with open(path, "w") as fh:
         json.dump(out, fh, indent=2, default=str)
     print(f"\nWrote {path}")
+    plot_model_comparison_lines(out, os.path.join(RESULTS_DIR,
+                                                  "model_comparison_line.png"))
 
     try:
         import joblib

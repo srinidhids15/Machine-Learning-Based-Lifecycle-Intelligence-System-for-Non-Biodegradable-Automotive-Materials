@@ -24,11 +24,12 @@ RESULTS = os.path.join(ROOT, "results")
 
 # Phase 2 artefacts only. Phase 1 outputs stay in results/ and are deliberately
 # NOT copied, so the evaluator sees one coherent set of current results.
-RESULT_PREFIXES = ("disposition_", "risk_", "shap_")
+RESULT_PREFIXES = ("disposition_", "risk_", "shap_", "tuning_", "activation_",
+                   "model_comparison_line")
 RESULT_FILES = ("results_summary_v2.json",)
 
 CODE_FILES = ["material_properties.py", "simulator.py", "make_dataset.py",
-              "deep_models.py", "train.py"]
+              "deep_models.py", "train.py", "tuning_study.py"]
 
 DATA_FILES = ["automotive_material_lifecycle_v2.csv", "dataset_card.md"]
 

@@ -220,12 +220,13 @@ class TorchTabularClassifier(ClassifierMixin, BaseEstimator):
                            hidden=self.hidden, num_layers=self.num_layers,
                            activation=self.activation, dropout=self.dropout)
         if self.arch == "transformer":
-            # nhead must divide d_model exactly.
+            # nhead must divide d_model exactly. PyTorch's encoder layer only
+            # accepts "relu" or "gelu" for its feed-forward block.
             nhead = 8 if self.d_model % 8 == 0 else 4
             return TransformerNet(
                 n_features, n_classes, d_model=self.d_model, nhead=nhead,
                 num_layers=self.num_layers, dim_feedforward=self.d_model * 2,
-                activation="gelu", dropout=self.dropout)
+                activation=self.activation, dropout=self.dropout)
         raise ValueError(f"unknown arch: {self.arch}")
 
     # -- training ---------------------------------------------------------
