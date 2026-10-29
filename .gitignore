@@ -5,3 +5,4 @@ __pycache__/
 .venv/
 venv/
 catboost_info/
+.sf
